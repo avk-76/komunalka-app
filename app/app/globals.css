@@ -1,0 +1,32 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-gradient-to-br from-emerald-50 via-cyan-50 to-teal-50 text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .service-card {
+    @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .service-card.meter {
+    @apply border-blue-200 bg-blue-50;
+  }
+  
+  .service-card.fixed {
+    @apply border-emerald-200 bg-emerald-50;
+  }
+  
+  .service-card.seasonal {
+    @apply border-orange-200 bg-orange-50;
+  }
+}

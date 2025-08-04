@@ -1,0 +1,36 @@
+
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/Uploads/utility_calculator/app/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Calculation {
+  id          String   @id @default(cuid())
+  apartmentId String
+  address     String
+  date        DateTime @default(now())
+  totalAmount Float
+  results     Json
+  readings    Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("calculations")
+}
+
+model Tariff {
+  id        String   @id @default(cuid())
+  serviceId String   @unique
+  rate      Float
+  isWinter  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tariffs")
+}
