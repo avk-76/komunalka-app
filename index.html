@@ -392,9 +392,25 @@ renderAptList();
     <div class="card">
       <div class="section-h">Відправити в Telegram</div>
       <div class="form-grid">
-        <div class="field"><label class="label">API Endpoint</label><input id="apiUrl" class="input" value="https://komunalka-bot.onrender.com/api/screenshot" placeholder="https://.../api/screenshot"></div>
-        <div class="field"><label class="label">API Key (необовʼязково)</label><input id="apiKey" class="input" placeholder="залиште порожнім, якщо не налаштовано"></div>
-      </div></div>
+  <div class="field">
+    <label class="label">Режим відправки</label>
+    <select id="sendMode" class="input">
+      <option value="tgapi">Прямо в Telegram API</option>
+      <option value="endpoint">Через бот-ендпоінт</option>
+    </select>
+  </div>
+</div>
+
+<div id="mode-tgapi" class="form-grid">
+  <div class="field"><label class="label">Bot Token</label><input id="tgToken" class="input" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"></div>
+  <div class="field"><label class="label">Chat ID</label><input id="tgChat" class="input" placeholder="Ваш CHAT_ID"></div>
+</div>
+
+<div id="mode-endpoint" class="form-grid" style="display:none">
+  <div class="field"><label class="label">API Endpoint</label><input id="apiUrl" class="input" value="https://komunalka-bot.onrender.com/api/screenshot" placeholder="https://.../api/screenshot"></div>
+  <div class="field"><label class="label">API Key (необовʼязково)</label><input id="apiKey" class="input" placeholder="залиште порожнім, якщо не налаштовано"></div>
+</div>
+        <div class="field"><label class="label">Chat ID</label><input id="tgChat" class="input" placeholder="Ваш CHAT_ID"></div>
       </div>
       <div style="height:8px"></div>
       <div class="field"><label class="label">Підпис (необовʼязково)</label><input id="tgCaption" class="input" placeholder="Скрін розрахунку комуналки"></div>
@@ -472,28 +488,70 @@ renderAptList();
     }
   });
 
-  
   document.getElementById('btnSendTG')?.addEventListener('click', async ()=>{
-    const apiUrl = document.getElementById('apiUrl').value.trim();
-    const apiKey = (document.getElementById('apiKey')?.value || '').trim();
-    const caption = document.getElementById('tgCaption').value.trim() || ('Скрін розрахунку • ' + periodKeyLabel());
-    if(!apiUrl){ tgStatus.textContent = '❗ Вкажіть API Endpoint.'; return; }
-    try{
-      tgStatus.textContent = '⏳ Готуємо зображення...';
-      const canvas = await captureDetails();
-      const dataUrl = canvas.toDataURL('image/png');
-      const body = JSON.stringify({ image: dataUrl, caption });
-      const headers = { 'Content-Type': 'application/json' };
-      if(apiKey) headers['X-API-KEY'] = apiKey;
-      const resp = await fetch(apiUrl, { method:'POST', headers, body });
-      if(!resp.ok){ throw new Error('HTTP '+resp.status); }
-      const json = await resp.json().catch(()=> ({}));
-      tgStatus.textContent = '✅ Надіслано власнику. Відкрийте бот і оберіть квартиру.';
-    }catch(err){
-      tgStatus.textContent = '❗ Не вдалося надіслати: ' + err.message;
-    }
-  });
+  const tgStatus = document.getElementById('tgStatus');
+  const sendMode = (document.getElementById('sendMode')?.value || 'tgapi');
 
+  tgStatus.textContent = '⏳ Готуємо зображення…';
+  try{
+    const canvas = await captureDetails();
+    const blob = await toBlob(canvas);
+
+    if(sendMode === 'tgapi'){
+      const token = document.getElementById('tgToken').value.trim();
+      const chatId = document.getElementById('tgChat').value.trim();
+      const caption = document.getElementById('tgCaption').value.trim() || ('Розрахунок: ' + periodKeyLabel());
+      if(!token || !chatId){
+        tgStatus.textContent = '❗ Вкажіть Bot Token і Chat ID.'; return;
+      }
+      const fd = new FormData();
+      fd.append('chat_id', chatId);
+      fd.append('caption', caption);
+      fd.append('photo', new File([blob], fileBaseName()+'.png', {type: 'image/png'}));
+      const resp = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method:'POST', body: fd });
+      if(!resp.ok){ throw new Error('HTTP '+resp.status); }
+      const json = await resp.json();
+      if(json.ok){ tgStatus.textContent = '✅ Відправлено в Telegram.'; }
+      else { tgStatus.textContent = '❗ Помилка Telegram: ' + (json.description || 'невідомо'); }
+      return;
+    }
+
+    // endpoint mode
+    const apiUrl = document.getElementById('apiUrl').value.trim();
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const caption = document.getElementById('tgCaption').value.trim() || ('Розрахунок: ' + periodKeyLabel());
+
+    // convert blob -> base64
+    const base64 = await new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = ()=> resolve((r.result || '').split(',')[1] || '');
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+
+    const headers = {'Content-Type':'application/json'};
+    if(apiKey) headers['X-API-KEY'] = apiKey;
+
+    const resp = await fetch(apiUrl, {
+      method:'POST',
+      headers,
+      body: JSON.stringify({ image: base64, caption })
+    });
+    if(!resp.ok){ throw new Error('HTTP '+resp.status); }
+    const json = await resp.json();
+    if(json.ok || json.message_id){ tgStatus.textContent = '✅ Відправлено на підтвердження власнику.'; }
+    else { tgStatus.textContent = '❗ Помилка API: ' + (json.error || 'невідомо'); }
+  }catch(err){
+    tgStatus.textContent = '❗ Не вдалося надіслати: ' + err.message;
+  }
+});;
+})();
+
+document.getElementById('sendMode')?.addEventListener('change', (e)=>{
+  const m = e.target.value;
+  document.getElementById('mode-tgapi').style.display = (m==='tgapi') ? '' : 'none';
+  document.getElementById('mode-endpoint').style.display = (m==='endpoint') ? '' : 'none';
+});
 </script>
 
 </body>
