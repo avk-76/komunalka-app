@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Комуналка • Демо (standalone v3)</title>
+<style>
+  :root{--bg:#0b1220;--border:rgba(255,255,255,.08);--muted:#94a3b8}
+  html,body{margin:0;height:100%;background:var(--bg);color:#e5e7eb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:16px 20px 60px}
+  .card{background:rgba(2,6,23,.7);border:1px solid var(--border);border-radius:16px;padding:16px;backdrop-filter:saturate(120%) blur(6px)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;gap:12px}
+  .grid-5{grid-template-columns:repeat(1,1fr)}
+  .grid-3{grid-template-columns:repeat(1,1fr)}
+  @media(min-width:640px){.grid-5{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:1024px){.grid-5{grid-template-columns:repeat(5,1fr)} .grid-3{grid-template-columns:repeat(3,1fr)}}
+  .btn{border:1px solid var(--border);background:#0b1324;color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .select{appearance:none;background:#0e182b;color:#fff;border:1px solid var(--border);padding:8px 28px 8px 10px;border-radius:10px}
+  .title{color:#fff;font-weight:800;letter-spacing:.2px}
+  .muted{color:var(--muted)}
+  .apt-title{font-size:16px;line-height:1.2;min-height:40px}
+  .apt-hint{font-size:14px}
+  .num{font-variant-numeric:tabular-nums}
+  .aptbtn{border:1px solid var(--border);background:#0e1627;border-radius:14px;padding:14px;text-align:left;color:#e2e8f0;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+  .aptbtn:hover{border-color:rgba(255,255,255,.16)}
+  .aptbtn.active{border-color:rgba(6,182,212,.5);background:#0b1426}
+  .header{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:16px;background:linear-gradient(to bottom,#0d172a,#0d172a,#0a1220)}
+  .header .content{position:relative;z-index:2;padding:18px}
+  .aurora{position:absolute;inset:-20%;filter:blur(40px);opacity:.75}
+  .blob{position:absolute;width:60vmin;height:60vmin;border-radius:40% 60% 55% 45% / 55% 45% 55% 45%;
+        background:radial-gradient(circle at 30% 30%, rgba(6,182,212,.25), transparent 60%),
+                   radial-gradient(circle at 70% 60%, rgba(99,102,241,.25), transparent 60%);
+        animation: blobMove 18s ease-in-out infinite}
+  .blob.b2{left:60%;top:-10%;animation-delay:-6s}
+  .blob.b1{left:-10%;top:10%}
+  @keyframes blobMove{0%{transform:translate(0,0) scale(1)}50%{transform:translate(6%,-4%) scale(1.1)}100%{transform:translate(0,0) scale(1)}}
+  .thinbar{grid-column:span 2;background:linear-gradient(90deg,rgba(34,211,238,.12),rgba(79,70,229,.12));border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;height:32px;align-self:start;justify-self:stretch;margin:0}
+  @media(max-width:1019px){.thinbar{grid-column:span 2;background:linear-gradient(90deg,rgba(34,211,238,.12),rgba(79,70,229,.12));border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;height:32px;align-self:start;justify-self:stretch;margin:0}}
+  .type-tag{font-size:11px;border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:2px 6px;color:#cbd5e1;background:#0d1930}
+  .form-wrap{border:1px dashed var(--border);border-radius:16px;padding:16px;background:rgba(2,6,23,.55);margin-bottom:12px}
+  .form-grid{display:grid;gap:12px;grid-template-columns:repeat(1,1fr)}
+  @media(min-width:860px){.form-grid{grid-template-columns:repeat(2,1fr)}}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .label{font-size:13px;color:#cbd5e1}
+  .input{background:#0b1324;color:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .pill{padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:#0e1627}
+  .fixed-list{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
+  .section-h{font-weight:800;color:#e5e7eb;margin:4px 0 8px 0}
+  .hint{font-size:12px;color:#94a3b8}
+  .savebar{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+  .btn.primary{background:#0ea5e9}
+  .btn.primary:disabled{opacity:.5}
+
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);z-index:50}
+  .modal.show{display:flex}
+  .modal .box{background:#0b1324;border:1px solid var(--border);border-radius:16px;padding:16px;max-width:520px;width:92%}
+  .row.spc{justify-content:space-between}
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div></div>
+      <div class="content row">
+        <div class="title" style="font-size:18px">Комуналка • Демо</div>
+        <div class="muted" style="margin-left:auto">Червень 2025 — база заповнена</div>
+      </div>
+    </div>
+
+    <div style="height:8px"></div>
+    <div id="apt-list" class="grid grid-5"></div>
+
+    <div style="height:10px"></div>
+
+    <div class="row">
+      <div class="card row">
+        <span class="muted" style="font-size:14px;">Оберіть період</span>
+        <select id="month" class="select"></select>
+        <select id="year" class="select"></select>
+      </div>
+      <button id="csv" class="btn">⬇ Експорт CSV</button>
+      <button id="sendimg" class="btn">📸 Надіслати як зображення</button>
+    </div>
+
+    <div style="height:10px"></div>
+    <div id="entry-form"></div>
+    <div id="details" class="card"></div>
+  </div>
+
+<script>
+const MONTHS_UA=["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
+const $=(s,e=document)=>e.querySelector(s);
+const toUAH=n=>n.toLocaleString("uk-UA",{minimumFractionDigits:2,maximumFractionDigits:2});
+const periodKey=(y,m)=>y+"-"+String(m+1).padStart(2,"0");
+function computeItemCost(it){ if(it.kind==="fixed"||it.kind==="variable") return it.tariff.fixed||0; const used=(it.curr||0)-(it.prev||0); return Math.max(0,used)*(it.tariff.price||0); }
+
+const aptCatalog=[
+  {id:"b-hmel",title:"Б. Хмельницького 8е/20"},
+  {id:"mechnykova",title:"Мечнікова 5/20"},
+  {id:"salak",title:"М. Салакунова 12/5"},
+  {id:"sevast",title:"Севастопольська 67А/2"},
+  {id:"hetmanska",title:"Гетьманська 50/178"},
+];
+
+const dataByPeriod={"2025-06": {
+    "b-hmel": [{"key": "light_day", "label": "🔆 Світло День", "prev": 1000, "curr": 1150, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 500, "curr": 600, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 62, "curr": 69, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "gas", "label": "🔥 Газ", "prev": 83, "curr": 85, "tariff": {"unit": "м³", "price": 7.89}, "kind": "meter"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 9000.0}, "kind": "fixed"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}, {"key": "ap_gas_fix", "label": "🔥 АП Газ", "tariff": {"unit": "грн/міс", "fixed": 3.51}, "kind": "fixed"}, {"key": "intercom", "label": "🔔 Домофон", "tariff": {"unit": "грн/міс", "fixed": 70.0}, "kind": "fixed"}, {"key": "zheu", "label": "🧾 ЖЄУ", "tariff": {"unit": "грн/міс", "fixed": 328.92}, "kind": "fixed"}, {"key": "trash", "label": "🗑️ Сміття", "tariff": {"unit": "грн/міс", "fixed": 33.57}, "kind": "fixed"}, {"key": "internet", "label": "📶 Інтернет", "tariff": {"unit": "грн/міс", "fixed": 260.0}, "kind": "fixed"}, {"key": "ap_heat", "label": "🔥 АП Опалення", "tariff": {"unit": "грн/міс", "fixed": 35.0}, "kind": "fixed"}],
+    "mechnykova": [{"key": "light_day", "label": "🔆 Світло День", "prev": 17655, "curr": 17775, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 7964, "curr": 8013, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "osbb", "label": "🏢 ОСББ", "tariff": {"unit": "грн/міс", "fixed": 1450.0}, "kind": "variable"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 18000.0}, "kind": "fixed"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}],
+    "salak": [{"key": "light_day", "label": "🔆 Світло День", "prev": 19104, "curr": 19256, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 5286, "curr": 5388, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 1391, "curr": 1399, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 10500.0}, "kind": "fixed"}, {"key": "osbb", "label": "🏢 ОСББ", "tariff": {"unit": "грн/міс", "fixed": 477.08}, "kind": "fixed"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}, {"key": "ap_heat", "label": "🔥 АП Опалення", "tariff": {"unit": "грн/міс", "fixed": 27.42}, "kind": "fixed"}],
+    "sevast": [{"key": "light_day", "label": "🔆 Світло День", "prev": 1644, "curr": 1765, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 866, "curr": 998, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 384, "curr": 387, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "water2", "label": "💧 Вода лічильник 2", "prev": 254, "curr": 256, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "gas", "label": "🔥 Газ", "prev": 10208, "curr": 10221, "tariff": {"unit": "м³", "price": 7.89}, "kind": "meter"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}, {"key": "ap_gas_fix", "label": "🔥 АП Газ", "tariff": {"unit": "грн/міс", "fixed": 101.96}, "kind": "fixed"}],
+    "hetmanska": null
+  }, "2025-07": {"b-hmel": [{"key": "light_day", "label": "🔆 Світло День", "prev": 1773, "curr": 1873, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 455, "curr": 485, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 130, "curr": 133, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "gas", "label": "🔥 Газ", "prev": 62, "curr": 64, "tariff": {"unit": "м³", "price": 7.89}, "kind": "meter"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 9000.0}, "kind": "fixed"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}, {"key": "ap_gas_fix", "label": "🔥 АП Газ", "tariff": {"unit": "грн/міс", "fixed": 3.51}, "kind": "fixed"}, {"key": "intercom", "label": "🔔 Домофон", "tariff": {"unit": "грн/міс", "fixed": 70.0}, "kind": "fixed"}, {"key": "zheu", "label": "🧾 ЖЄУ", "tariff": {"unit": "грн/міс", "fixed": 328.92}, "kind": "fixed"}, {"key": "trash", "label": "🗑️ Сміття", "tariff": {"unit": "грн/міс", "fixed": 33.57}, "kind": "fixed"}, {"key": "internet", "label": "📶 Інтернет", "tariff": {"unit": "грн/міс", "fixed": 260.0}, "kind": "fixed"}, {"key": "ap_heat", "label": "🔥 АП Опалення", "tariff": {"unit": "грн/міс", "fixed": 35.0}, "kind": "fixed"}], "mechnykova": [{"key": "light_day", "label": "🔆 Світло День", "prev": 17755, "curr": 17948, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 8013, "curr": 8094, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 316, "curr": 319, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "osbb", "label": "🏢 ОСББ", "tariff": {"unit": "грн/міс", "fixed": 1643.0}, "kind": "variable"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 18000.0}, "kind": "fixed"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}], "salak": [{"key": "light_day", "label": "🔆 Світло День", "prev": 19256, "curr": 19426, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 5388, "curr": 5495, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 1399, "curr": 1406, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 10500.0}, "kind": "fixed"}, {"key": "osbb", "label": "🏢 ОСББ", "tariff": {"unit": "грн/міс", "fixed": 477.08}, "kind": "fixed"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}, {"key": "ap_heat", "label": "🔥 АП Опалення", "tariff": {"unit": "грн/міс", "fixed": 27.42}, "kind": "fixed"}], "sevast": [{"key": "light_day", "label": "🔆 Світло День", "prev": 1765, "curr": 1980, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 998, "curr": 1298, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 387, "curr": 390, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "water2", "label": "💧 Вода лічильник 2", "prev": 256, "curr": 262, "tariff": {"unit": "м³", "price": 31.36}, "kind": "meter"}, {"key": "gas", "label": "🔥 Газ", "prev": 10241, "curr": 10246, "tariff": {"unit": "м³", "price": 7.89}, "kind": "meter"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 38.0}, "kind": "fixed"}, {"key": "ap_gas_fix", "label": "🔥 АП Газ", "tariff": {"unit": "грн/міс", "fixed": 101.96}, "kind": "fixed"}], "hetmanska": [{"key": "light_day", "label": "🔆 Світло День", "prev": 9159, "curr": 9316, "tariff": {"unit": "кВт·год", "price": 4.32}, "kind": "meter"}, {"key": "light_night", "label": "🌙 Світло Ніч", "prev": 2849, "curr": 3005, "tariff": {"unit": "кВт·год", "price": 2.16}, "kind": "meter"}, {"key": "water1", "label": "💧 Вода лічильник 1", "prev": 1068, "curr": 1076, "tariff": {"unit": "м³", "price": 89.91}, "kind": "meter"}, {"key": "ap_water_fix", "label": "💧 АП Вода", "tariff": {"unit": "грн/міс", "fixed": 56.14}, "kind": "fixed"}, {"key": "gas", "label": "🔥 Газ", "prev": 1612, "curr": 1616, "tariff": {"unit": "м³", "price": 7.96}, "kind": "meter"}, {"key": "ap_gas_fix", "label": "🔥 АП Газ", "tariff": {"unit": "грн/міс", "fixed": 16.36}, "kind": "fixed"}, {"key": "ap_heat", "label": "🔥 АП Опалення", "tariff": {"unit": "грн/міс", "fixed": 38.8}, "kind": "fixed"}, {"key": "osbb", "label": "🏢 ОСББ", "tariff": {"unit": "грн/міс", "fixed": 209.8}, "kind": "fixed"}, {"key": "rent", "label": "🏠 Орендна плата", "tariff": {"unit": "грн/міс", "fixed": 8500.0}, "kind": "fixed"}]}};
+
+let currentAptId=aptCatalog[0].id;
+let currentMonth = 7; // Липень
+let currentYear=2025;
+
+function getItemsFor(aptId,y,m){
+  const key=periodKey(y,m);
+  const p=dataByPeriod[key];
+  return p && p[aptId] ? JSON.parse(JSON.stringify(p[aptId])) : null;
+}
+
+function renderAptList(){
+  const host=document.getElementById("apt-list"); host.innerHTML="";
+  const key=periodKey(currentYear,currentMonth);
+  aptCatalog.forEach(ap=>{
+    const has=!!(dataByPeriod[key] && dataByPeriod[key][ap.id]);
+    const hint= has ? "Перегляньте дані" : "Введіть дані";
+    const btn=document.createElement("button");
+    btn.className="aptbtn"+(ap.id===currentAptId?" active":"");
+    btn.innerHTML=`<div class="apt-title title">${ap.title}</div><div class="apt-hint muted">${hint}</div>`;
+    btn.onclick=()=>{currentAptId=ap.id; renderAptList(); renderDetails();};
+    host.appendChild(btn);
+  });
+}
+
+function renderSelectors(){
+  const mSel=document.getElementById("month"), ySel=document.getElementById("year");
+  mSel.innerHTML=MONTHS_UA.map((m,i)=>`<option value="${i}" ${i===currentMonth?"selected":""}>${m}</option>`).join("");
+  const years=Array.from({length:6},(_,k)=>2023+k);
+  ySel.innerHTML=years.map(y=>`<option value="${y}" ${y===currentYear?"selected":""}>${y}</option>`).join("");
+  mSel.onchange=e=>{currentMonth=+e.target.value; renderAptList(); renderDetails();};
+  ySel.onchange=e=>{currentYear=+e.target.value; renderAptList(); renderDetails();};
+}
+
+function tileHTML(it){
+  const used = it.kind==="meter"? Math.max(0,(it.curr||0)-(it.prev||0)) : null;
+  const cost = computeItemCost(it);
+  const typeTag = it.kind==="meter" ? "Лічильник" : (it.kind==="variable" ? "Змінна" : "Фіксована");
+  const lines = it.kind==="meter"
+    ? `<div class="muted">Попередні: <span class="num" style="color:#e2e8f0">${it.prev}</span> ${it.tariff.unit}</div>
+       <div class="muted">Поточні: <span class="num" style="color:#e2e8f0">${it.curr}</span> ${it.tariff.unit}</div>
+       <div class="muted">Споживання: <span class="num" style="color:#22c55e">${used}</span> ${it.tariff.unit}</div>
+       <div class="muted">Тариф: <span class="num" style="color:#e2e8f0">${(it.tariff.price||it.tariff.fixed)}</span> ${it.kind==="meter"?"грн/"+it.tariff.unit:"грн/міс"}</div>`
+    : (it.kind==="variable" ? `<div class="muted">Змінна сума на місяць</div>` : `<div class="muted">Фіксована сума</div>`);
+  return `<div class="card tile">
+    <div class="row" style="align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h4 class="title" style="margin:0">${it.label}</h4>
+      <span class="type-tag">${typeTag}</span>
+    </div>
+    ${lines}
+    <div class="title num" style="margin-top:8px;font-size:18px">${toUAH(cost)} грн</div>
+  </div>`;
+}
+
+
+
+
+
+
+
+function prevPeriodKey(y,m){
+  // return the nearest previous period key that exists in dataByPeriod
+  let d=new Date(y,m,1); d.setMonth(d.getMonth()-1);
+  for(let i=0;i<24;i++){
+    const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    if(dataByPeriod[k]) return k;
+    d.setMonth(d.getMonth()-1);
+  }
+  return null;
+}
+
+function renderEntryForm(ap){
+  const key=periodKey(currentYear,currentMonth);
+  const host=document.getElementById("entry-form");
+  host.innerHTML="";
+  // If the period already has data for this apt -> hide form
+  const existing = dataByPeriod[key] && dataByPeriod[key][ap.id];
+  if(existing) { host.innerHTML=""; return; }
+
+  // Determine previous items for this apt
+  // Prefer previous period if available, else the latest earlier period that has this apt.
+  let prevK = prevPeriodKey(currentYear,currentMonth);
+  let prevItems=null;
+  while(prevK){
+    if(dataByPeriod[prevK] && dataByPeriod[prevK][ap.id]) { prevItems = JSON.parse(JSON.stringify(dataByPeriod[prevK][ap.id])); break; }
+    const [yy,mm]=prevK.split("-").map(Number); prevK = prevPeriodKey(yy,mm-1);
+  }
+  if(!prevItems){ host.innerHTML = '<div class="card">Немає даних попереднього періоду для попереднього заповнення.</div>'; return; }
+
+  const meters = prevItems.filter(i=>i.kind==="meter");
+  const fixed = prevItems.filter(i=>i.kind==="fixed");
+  const variables = prevItems.filter(i=>i.kind==="variable");
+
+  // Build form HTML
+  let form = `<div class="form-wrap">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div class="section-h">Внесення показників – ${MONTHS_UA[currentMonth]} ${currentYear} р.</div>
+      <div class="hint">Попередні показники взяті з ${MONTHS_UA[+prevK.split('-')[1]-1]} ${prevK.split('-')[0]} р.</div>
+    </div>
+    <div class="form-grid">`;
+
+  meters.forEach((it,idx)=>{
+    const usedPrev = it.curr; // Previous month's current -> becomes "Попередній"
+    form += `<div class="card">
+      <div class="title" style="font-size:16px;margin-bottom:8px">${it.label}</div>
+      <div class="field"><label class="label">Попередній показник (${it.tariff.unit})</label>
+         <input class="input" type="number" inputmode="decimal" id="prev_${idx}" value="${usedPrev}" disabled></div>
+      <div class="field"><label class="label">Поточний показник (${it.tariff.unit})</label>
+         <input class="input meter-input" data-idx="${idx}" data-key="${it.key}" type="number" inputmode="decimal" placeholder="0.00"></div>
+      <div class="hint">Тариф: ${(it.tariff.price||0)} грн за ${it.tariff.unit}</div>
+    </div>`;
+  });
+  form += `</div>`;
+
+  if(variables.length){
+    form += `<div class="section-h" style="margin-top:12px"></div>
+      <div class="form-grid">`;
+    variables.forEach((it,vidx)=>{
+      form += `<div class="card"><div class="title" style="font-size:16px;margin-bottom:8px">${it.label}</div>
+        <div class="field"><label class="label">Сума (грн)</label>
+        <input class="input var-input" data-vkey="${it.key}" type="number" inputmode="decimal" value="${(it.tariff.fixed||0)}"></div></div>`;
+    });
+    form += `</div>`;
+  }
+
+  if(fixed.length){
+    form += `<div class="section-h" style="margin-top:12px">Постійні платежі</div>
+      <div class="fixed-list">`+ fixed.map(it=>`<div class="pill"><div class="muted">${it.label}</div><div class="title num" style="font-size:16px">${(it.tariff.fixed||0).toLocaleString("uk-UA",{minimumFractionDigits:2,maximumFractionDigits:2})} грн</div></div>`).join("") + `</div>`;
+  }
+
+  form += `<div style="height:10px"></div>
+    <div class="savebar">
+      <button id="calcSave" class="btn primary" disabled>Розрахувати та зберегти</button>
+      <div class="hint">Заповніть усі показники лічильників.</div>
+    </div>
+  </div>`;
+
+  host.innerHTML = form;
+
+  function validate(){
+    const allFilled = [...document.querySelectorAll(".meter-input")].every(inp => inp.value !== "");
+    document.getElementById("calcSave").disabled = !allFilled;
+  }
+  document.querySelectorAll(".meter-input").forEach(inp=> inp.addEventListener("input", validate));
+  validate();
+
+  document.getElementById("calcSave").onclick = ()=>{
+    // Build new items from prevItems + inputs
+    const newItems = [];
+    meters.forEach((it,idx)=>{
+      const currVal = parseFloat(document.querySelector(`.meter-input[data-idx="${idx}"]`).value||"0");
+      const newIt = {key:it.key,label:it.label,prev:it.curr,curr:currVal,tariff:it.tariff,kind:"meter"};
+      newItems.push(newIt);
+    });
+    variables.forEach((it)=>{
+      const valEl = document.querySelector(`.var-input[data-vkey="${it.key}"]`);
+      const amt = valEl? parseFloat(valEl.value||"0") : 0;
+      newItems.push({key:it.key,label:it.label,tariff:{unit:"грн/міс",fixed:amt},kind:"variable"});
+    });
+    fixed.forEach(it=> newItems.push(it));
+
+    const k = key;
+    dataByPeriod[k] = dataByPeriod[k] || {};
+    dataByPeriod[k][ap.id] = newItems;
+
+    // Clear form and show details
+    host.innerHTML = "";
+    renderAptList();
+    renderDetails();
+  };
+}
+
+function renderDetails(){
+  const showFormIfNeeded = ()=>{
+    const ap=aptCatalog.find(a=>a.id===currentAptId);
+    const key=periodKey(currentYear,currentMonth);
+    if(!(dataByPeriod[key] && dataByPeriod[key][ap.id])){ renderEntryForm(ap); } else { document.getElementById('entry-form').innerHTML=''; }
+  };
+  const ap=aptCatalog.find(a=>a.id===currentAptId);
+  const items=getItemsFor(ap.id,currentYear,currentMonth);
+  const csvBtn=document.getElementById("csv");
+  const periodLabel=`${MONTHS_UA[currentMonth]} ${currentYear} р.`;
+  let html=`<div class="row" style="justify-content:space-between;gap:8px">
+    <div class="title" style="font-size:18px">${ap.title}</div>
+    <div class="muted">${periodLabel}</div>
+  </div><div style="height:8px"></div>`;
+
+  if(items && items.length){
+    const get = (k)=>items.find(i=>i.key===k);
+    const day=get("light_day"), night=get("light_night");
+    const w1=get("water1"), w2=get("water2");
+    const gas=get("gas"), apWater=get("ap_water_fix"), apGas=get("ap_gas_fix");
+
+    const lightSum=(day?computeItemCost(day):0)+(night?computeItemCost(night):0);
+    const waterSum=(w1?computeItemCost(w1):0)+(w2?computeItemCost(w2):0);
+    const total=items.reduce((s,it)=>s+computeItemCost(it),0);
+
+    if(ap.id==="sevast"){
+      const tileAt=(it,style)=> it? `<div style="${style}">${tileHTML(it)}</div>` : "";
+      let grid = `<div class="grid grid-3">`;
+      // Row 1
+      grid += tileAt(day,   "grid-column:1");
+      grid += tileAt(night, "grid-column:2");
+      grid += tileAt(gas,   "grid-column:3");
+      // Row 2: light summary
+      grid += `<div class="thinbar" style="grid-column:1 / span 2;"><div class="title" style="font-size:15px">Загалом світло</div><div class="title num" style="font-size:17px">${toUAH(lightSum)} грн</div></div>`;
+      // Row 3: waters + AP Water
+      grid += tileAt(w1, "grid-column:1");
+      grid += tileAt(w2, "grid-column:2");
+      grid += tileAt(apWater, "grid-column:3");
+      // Row 4: water summary + AP Gas (right next to sum)
+      grid += `<div class="thinbar" style="grid-column:1 / span 2;"><div class="title" style="font-size:15px">Загалом вода</div><div class="title num" style="font-size:17px">${toUAH(waterSum)} грн</div></div>`;
+      grid += tileAt(apGas, "grid-column:3");
+      // Any other items
+      const used=[day,night,gas,w1,w2,apWater,apGas].filter(Boolean);
+      const others = items.filter(it => !used.includes(it));
+      html+= grid + others.map(tileHTML).join("") + `</div>`;
+    } else {
+      const rest=items.filter(i=>i.key!=="light_day" && i.key!=="light_night");
+      html+=`<div class="grid grid-3">
+        ${day?tileHTML(day):""}
+        ${night?tileHTML(night):""}
+        ${rest[0]? tileHTML(rest[0]).replace('class="card tile"','class="card tile" style="grid-row:span 2"') : ""}
+        <div class="thinbar"><div class="title" style="font-size:15px">Загалом світло</div><div class="title num" style="font-size:17px">${toUAH(lightSum)} грн</div></div>
+        ${rest.slice(1).map(tileHTML).join("")}
+      </div>`;
+    }
+
+    html+=`<div style="height:12px"></div>
+      <div class="row" style="justify-content:flex-end">
+        <div class="card" style="background:#0e1627"><div class="muted" style="font-size:13px">Усього до сплати</div><div class="title num" style="font-size:22px">${toUAH(total)} грн</div></div>
+      </div>`;
+
+    csvBtn.disabled=false;
+    csvBtn.onclick=()=>{
+      const rows=[["Послуга","Тип","Попередні","Поточні","Одиниці","Тариф/Фікс","Сума"]];
+      items.forEach(it=>{
+        const unit= it.tariff.unit||"міс";
+        const tariff = it.kind==="meter"?it.tariff.price:it.tariff.fixed;
+        const cost=computeItemCost(it);
+        rows.push([it.label, it.kind, it.prev||"", it.curr||"", unit, tariff, cost]);
+      });
+      const csv = rows.map(r=>r.join(",")).join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url; a.download=`komunalka_${ap.id}_${periodKey(currentYear,currentMonth)}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    };
+  } else {
+    html+=`<div class="card" style="border-style:dashed">Даних за обраний період поки немає. <b>Введіть дані</b>, щоб зберегти розрахунок.</div>`;
+    csvBtn.disabled=true; csvBtn.onclick=null;
+  }
+  document.getElementById("details").innerHTML=html;
+  showFormIfNeeded();
+}
+
+renderAptList();
+
+
+
+
+ renderSelectors(); renderDetails();
+</script>
+
+<div id="imgModal" class="modal">
+  <div class="box">
+    <div class="row spc" style="align-items:center">
+      <div class="title" style="font-size:16px">Надіслати/зберегти скрін розрахунку</div>
+      <button id="closeModal" class="btn">✖</button>
+    </div>
+    <div style="height:10px"></div>
+    <div class="row" style="gap:12px;flex-wrap:wrap">
+      <button id="btnDownloadPNG" class="btn primary">⬇ Завантажити PNG</button>
+      <button id="btnCopyClipboard" class="btn">📋 Скопіювати у буфер</button>
+    </div>
+    <div style="height:12px"></div>
+    <div class="card">
+      <div class="section-h">Відправити в Telegram</div>
+      <div class="form-grid">
+        <div class="field"><label class="label">Bot Token</label><input id="tgToken" class="input" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"></div>
+        <div class="field"><label class="label">Chat ID</label><input id="tgChat" class="input" placeholder="Ваш CHAT_ID"></div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="field"><label class="label">Підпис (необовʼязково)</label><input id="tgCaption" class="input" placeholder="Скрін розрахунку комуналки"></div>
+      <div style="height:10px"></div>
+      <button id="btnSendTG" class="btn">➡ Надіслати в Telegram</button>
+      <div id="tgStatus" class="hint" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+(function(){
+  const modal = document.getElementById('imgModal');
+  const openBtn = document.getElementById('sendimg');
+  const closeBtn = document.getElementById('closeModal');
+  const detailsEl = document.getElementById('details');
+  const monthSel = document.getElementById('month');
+  const yearSel = document.getElementById('year');
+  const tgStatus = document.getElementById('tgStatus');
+
+  function periodKeyLabel(){
+    const m = parseInt(monthSel.value,10);
+    const y = parseInt(yearSel.value,10);
+    return `${MONTHS_UA[m]} ${y}`;
+  }
+
+  function captureDetails(){
+    const node = detailsEl;
+    const rect = node.getBoundingClientRect();
+    return html2canvas(node, {
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#0b1220',
+      scale: window.devicePixelRatio > 1 ? 2 : 1,
+      useCORS: true,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight
+    });
+  }
+
+  function fileBaseName(){
+    const apTitle = (detailsEl.querySelector('.row .title')?.textContent || 'apt').replace(/[\s\/\\:]+/g,'_');
+    const period = periodKeyLabel().replace(/[\s\/\\:]+/g,'_');
+    return `komunalka_${apTitle}_${period}`;
+  }
+
+  async function toBlob(canvas){
+    return new Promise(res=>canvas.toBlob(res));
+  }
+
+  openBtn?.addEventListener('click', ()=>{ modal.classList.add('show'); tgStatus.textContent=''; });
+  closeBtn?.addEventListener('click', ()=>{ modal.classList.remove('show'); });
+
+  document.getElementById('btnDownloadPNG')?.addEventListener('click', async ()=>{
+    const canvas = await captureDetails();
+    const blob = await toBlob(canvas);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileBaseName() + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('btnCopyClipboard')?.addEventListener('click', async ()=>{
+    try{
+      const canvas = await captureDetails();
+      canvas.toBlob(async (blob)=>{
+        const item = new ClipboardItem({ [blob.type]: blob });
+        await navigator.clipboard.write([item]);
+        tgStatus.textContent = '✅ Зображення скопійоване у буфер обміну.';
+      });
+    }catch(e){
+      tgStatus.textContent = '❗ Не вдалося скопіювати у буфер (обмеження браузера).';
+    }
+  });
+
+  document.getElementById('btnSendTG')?.addEventListener('click', async ()=>{
+    const token = document.getElementById('tgToken').value.trim();
+    const chatId = document.getElementById('tgChat').value.trim();
+    const caption = document.getElementById('tgCaption').value.trim() || ('Розрахунок: ' + periodKeyLabel());
+    if(!token || !chatId){
+      tgStatus.textContent = '❗ Вкажіть Bot Token і Chat ID.'; return;
+    }
+    tgStatus.textContent = '⏳ Готуємо зображення…';
+    try{
+      const canvas = await captureDetails();
+      const blob = await toBlob(canvas);
+      const fd = new FormData();
+      fd.append('chat_id', chatId);
+      fd.append('caption', caption);
+      fd.append('photo', new File([blob], fileBaseName()+'.png', {type: 'image/png'}));
+      const resp = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method:'POST', body: fd });
+      if(!resp.ok){ throw new Error('HTTP '+resp.status); }
+      const json = await resp.json();
+      if(json.ok){
+        tgStatus.textContent = '✅ Відправлено в Telegram.';
+      } else {
+        tgStatus.textContent = '❗ Помилка Telegram: ' + (json.description || 'невідомо');
+      }
+    }catch(err){
+      tgStatus.textContent = '❗ Не вдалося надіслати: ' + err.message;
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
