@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Комуналка • Демо (standalone v3)</title>
+<title>Комуналка • AVK (standalone v3)</title>
 <style>
   :root{--bg:#0b1220;--border:rgba(255,255,255,.08);--muted:#94a3b8}
   html,body{margin:0;height:100%;background:var(--bg);color:#e5e7eb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
@@ -59,13 +59,24 @@
   .row.spc{justify-content:space-between}
 
 </style>
+
+<style>
+/* Boost brand/title size in header */
+header .brand, .brand, .hdr .title, .topbar .title { font-size: 26px !important; }
+/* Remove any '— база заповнена' style banners if still present via CSS fallback */
+.badge-filled, .period-status, .top-right-note { display: none !important; }
+</style>
+
+<style>
+#btnSendTG .tg-icn{ vertical-align: -3px; margin-left: 8px; display: inline-block; }
+</style>
 </head>
 <body>
   <div class="wrap">
     <div class="header">
       <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div></div>
       <div class="content row">
-        <div class="title" style="font-size:18px">Комуналка • Демо</div>
+        <div class="title" style="font-size:18px">Комуналка • AVK</div>
         <div class="muted" style="margin-left:auto">Червень 2025 — база заповнена</div>
       </div>
     </div>
@@ -342,7 +353,7 @@ function renderDetails(){
 
     html+=`<div style="height:12px"></div>
       <div class="row" style="justify-content:flex-end">
-        <div class="card" style="background:#0e1627"><div class="muted" style="font-size:13px">Усього до сплати</div><div class="title num" style="font-size:22px">${toUAH(total)} грн</div></div>
+        <div class="card" style="background:#0e1627"><div class="muted" style="font-size:13px">Всього до сплати</div><div class="title num" style="font-size:22px">${toUAH(total)} грн</div></div>
       </div>`;
 
     csvBtn.disabled=false;
@@ -390,32 +401,44 @@ renderAptList();
     </div>
     <div style="height:12px"></div>
     <div class="card">
-      <div class="section-h">Відправити в Telegram</div>
-      <div class="form-grid">
+      <div class="section-h">Відправити в Telegram <button id="cfgBtn" class="btn" type="button" style="margin-left:8px;padding:6px 10px">⚙</button></div>
+      
+<div class="form-grid">
+  <div class="field" id="tgTokenRow">
+    <label class="label">Bot Token (збережеться локально і сховається)</label>
+    <input id="tgToken" class="input" placeholder="Вставте токен один раз — збережемо в браузері">
+    <div class="hint">Щоб змінити — натисніть ⚙ справа від заголовку.</div>
+  </div>
+
   <div class="field">
-    <label class="label">Режим відправки</label>
-    <select id="sendMode" class="input">
-      <option value="tgapi">Прямо в Telegram API</option>
-      <option value="endpoint">Через бот-ендпоінт</option>
+    <label class="label">Одержувач (квартира)</label>
+    <select id="aptSelect" class="input">
+      <option value="">— Оберіть одержувача —</option>
+      <option value="551405030" data-name="Б. Хмельницького 8е/20">Б. Хмельницького 8е/20</option>
+      <option value="338787777" data-name="Мечнікова 5/20">Мечнікова 5/20</option>
+      <option value="5074929397" data-name="М. Салакунова 12/5">М. Салакунова 12/5</option>
+      <option value="254073924" data-name="Севастопольська 67А/2">Севастопольська 67А/2</option>
+      <option value="863294114" data-name="Гетьманська 50/178">Гетьманська 50/178</option>
+      <option value="manual" data-name="Вказати вручну">Вказати вручну…</option>
     </select>
+  </div>
+
+  <div class="field">
+    <label class="label">Chat ID</label>
+    <input id="tgChat" class="input" placeholder="Автозаповнюється з вибору або введіть вручну">
   </div>
 </div>
 
-<div id="mode-tgapi" class="form-grid">
-  <div class="field"><label class="label">Bot Token</label><input id="tgToken" class="input" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"></div>
-  <div class="field"><label class="label">Chat ID</label><input id="tgChat" class="input" placeholder="Ваш CHAT_ID"></div>
-</div>
-
-<div id="mode-endpoint" class="form-grid" style="display:none">
-  <div class="field"><label class="label">API Endpoint</label><input id="apiUrl" class="input" value="https://komunalka-bot.onrender.com/api/screenshot" placeholder="https://.../api/screenshot"></div>
-  <div class="field"><label class="label">API Key (необовʼязково)</label><input id="apiKey" class="input" placeholder="залиште порожнім, якщо не налаштовано"></div>
-</div>
-        <div class="field"><label class="label">Chat ID</label><input id="tgChat" class="input" placeholder="Ваш CHAT_ID"></div>
-      </div>
       <div style="height:8px"></div>
       <div class="field"><label class="label">Підпис (необовʼязково)</label><input id="tgCaption" class="input" placeholder="Скрін розрахунку комуналки"></div>
       <div style="height:10px"></div>
-      <button id="btnSendTG" class="btn">➡ Надіслати в Telegram</button>
+      <button id="btnSendTG" class="btn">➡ Надіслати в Telegram <svg class="tg-icn" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="18" height="18" aria-hidden="true">
+  <defs><linearGradient id="g" x1="0.66" y1="0.11" x2="0.34" y2="0.89">
+    <stop offset="0" stop-color="#37aee2"/><stop offset="1" stop-color="#1e96c8"/>
+  </linearGradient></defs>
+  <circle cx="120" cy="120" r="120" fill="url(#g)"/>
+  <path d="M193 69c3 1 4 5 1 7l-20 94c-1 6-8 8-12 5l-33-24-18 17c-2 2-5 3-7 3l3-37 67-60c3-3-1-4-4-2l-83 52-35-11c-6-2-6-10 1-12l137-53c2-1 3-1 4-1z" fill="#fff"/>
+</svg></button>
       <div id="tgStatus" class="hint" style="margin-top:8px"></div>
     </div>
   </div>
@@ -489,21 +512,16 @@ renderAptList();
   });
 
   document.getElementById('btnSendTG')?.addEventListener('click', async ()=>{
-  const tgStatus = document.getElementById('tgStatus');
-  const sendMode = (document.getElementById('sendMode')?.value || 'tgapi');
-
-  tgStatus.textContent = '⏳ Готуємо зображення…';
-  try{
-    const canvas = await captureDetails();
-    const blob = await toBlob(canvas);
-
-    if(sendMode === 'tgapi'){
-      const token = document.getElementById('tgToken').value.trim();
-      const chatId = document.getElementById('tgChat').value.trim();
-      const caption = document.getElementById('tgCaption').value.trim() || ('Розрахунок: ' + periodKeyLabel());
-      if(!token || !chatId){
-        tgStatus.textContent = '❗ Вкажіть Bot Token і Chat ID.'; return;
-      }
+    let token = (getStoredToken() || document.getElementById('tgToken')?.value.trim() || '');
+    const chatId = document.getElementById('tgChat').value.trim();
+    const caption = document.getElementById('tgCaption').value.trim() || ('Розрахунок за ' + getPeriodLabel());
+    if(!token || !chatId){
+      tgStatus.textContent = '❗ Вкажіть Bot Token і Chat ID.'; return;
+    }
+    tgStatus.textContent = '⏳ Готуємо зображення…';
+    try{
+      const canvas = await captureDetails();
+      const blob = await toBlob(canvas);
       const fd = new FormData();
       fd.append('chat_id', chatId);
       fd.append('caption', caption);
@@ -511,48 +529,120 @@ renderAptList();
       const resp = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method:'POST', body: fd });
       if(!resp.ok){ throw new Error('HTTP '+resp.status); }
       const json = await resp.json();
-      if(json.ok){ tgStatus.textContent = '✅ Відправлено в Telegram.'; }
-      else { tgStatus.textContent = '❗ Помилка Telegram: ' + (json.description || 'невідомо'); }
-      return;
+      if(json.ok){
+        tgStatus.textContent = '✅ Відправлено в Telegram.';
+      } else {
+        tgStatus.textContent = '❗ Помилка Telegram: ' + (json.description || 'невідомо');
+      }
+    }catch(err){
+      tgStatus.textContent = '❗ Не вдалося надіслати: ' + err.message;
     }
-
-    // endpoint mode
-    const apiUrl = document.getElementById('apiUrl').value.trim();
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const caption = document.getElementById('tgCaption').value.trim() || ('Розрахунок: ' + periodKeyLabel());
-
-    // convert blob -> base64
-    const base64 = await new Promise((resolve, reject)=>{
-      const r = new FileReader();
-      r.onload = ()=> resolve((r.result || '').split(',')[1] || '');
-      r.onerror = reject;
-      r.readAsDataURL(blob);
-    });
-
-    const headers = {'Content-Type':'application/json'};
-    if(apiKey) headers['X-API-KEY'] = apiKey;
-
-    const resp = await fetch(apiUrl, {
-      method:'POST',
-      headers,
-      body: JSON.stringify({ image: base64, caption })
-    });
-    if(!resp.ok){ throw new Error('HTTP '+resp.status); }
-    const json = await resp.json();
-    if(json.ok || json.message_id){ tgStatus.textContent = '✅ Відправлено на підтвердження власнику.'; }
-    else { tgStatus.textContent = '❗ Помилка API: ' + (json.error || 'невідомо'); }
-  }catch(err){
-    tgStatus.textContent = '❗ Не вдалося надіслати: ' + err.message;
-  }
-});;
+  });
 })();
+</script>
 
-document.getElementById('sendMode')?.addEventListener('change', (e)=>{
-  const m = e.target.value;
-  document.getElementById('mode-tgapi').style.display = (m==='tgapi') ? '' : 'none';
-  document.getElementById('mode-endpoint').style.display = (m==='endpoint') ? '' : 'none';
+
+<script>
+const TOKEN_KEY = 'komunalka_bot_token';
+function getStoredToken(){ try{ return localStorage.getItem(TOKEN_KEY) || ''; }catch(e){ return ''; } }
+function setStoredToken(v){ try{ localStorage.setItem(TOKEN_KEY, v||''); }catch(e){} }
+
+function initLocalTokenUI(){
+  const row = document.getElementById('tgTokenRow');
+  const inp = document.getElementById('tgToken');
+  const btn = document.getElementById('cfgBtn');
+  if(!row || !inp || !btn) return;
+  const existing = getStoredToken();
+  if(existing){ row.style.display = 'none'; }
+  inp.addEventListener('change', ()=>{
+    if(inp.value.trim()){
+      setStoredToken(inp.value.trim());
+      row.style.display = 'none';
+    }
+  });
+  btn.addEventListener('click', ()=>{
+    row.style.display = (row.style.display==='none') ? '' : 'none';
+  });
+}
+
+function initAptSelect(){
+  const sel = document.getElementById('aptSelect');
+  const chat = document.getElementById('tgChat');
+  const cap = document.getElementById('tgCaption');
+  if(!sel || !chat) return;
+  sel.addEventListener('change', ()=>{
+    const opt = sel.options[sel.selectedIndex];
+    const val = sel.value;
+    const name = opt?.dataset?.name || '';
+    if(val && val!=='manual'){
+      chat.value = val;
+      if(cap && !cap.value){ cap.value = 'Розрахунок за ' + getPeriodLabel(); }
+    } else if(val==='manual'){ chat.value = ''; }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  initLocalTokenUI();
+  initAptSelect();
 });
 </script>
 
+<script>
+function getPeriodLabel(){
+  try{
+    if (typeof periodKeyLabel === 'function') {
+      return periodKeyLabel();
+    }
+  }catch(e){}
+  // Fallbacks: try to read visible month/year controls
+  const mSel = document.querySelector('select[name="month"], select#month, [data-role="month"] select, [data-testid="month"] select') || document.querySelector('select');
+  const ySel = document.querySelector('select[name="year"], select#year, [data-role="year"] select, [data-testid="year"] select');
+  const m = mSel && mSel.options && mSel.selectedIndex >= 0 ? mSel.options[mSel.selectedIndex].text.trim() : '';
+  const y = ySel && ySel.options && ySel.selectedIndex >= 0 ? ySel.options[ySel.selectedIndex].text.trim() : '';
+  return (m && y) ? (m + ' ' + y) : (m || y || '');
+}
+</script>
+
+<script>
+(function(){
+  const AUTO_PREFIX = 'Розрахунок за ';
+  function updateCaptionByPeriod(forcePrefix=false){
+    var cap = document.getElementById('tgCaption');
+    if(!cap) return;
+    var current = (cap.value||'').trim();
+    var label = (typeof getPeriodLabel==='function') ? getPeriodLabel() : '';
+    var next = AUTO_PREFIX + (label||'');
+    if(forcePrefix || current==='' || current.startsWith(AUTO_PREFIX)){
+      cap.value = next.trim();
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    // initial
+    updateCaptionByPeriod(false);
+    // on any select change (month/year selectors usually are selects)
+    document.querySelectorAll('select').forEach(sel=>{
+      sel.addEventListener('change', ()=>updateCaptionByPeriod(false));
+    });
+    // on Download PNG (exact id from our UI)
+    var dl = document.getElementById('btnDownloadPNG');
+    if(dl){ dl.addEventListener('click', ()=>updateCaptionByPeriod(false)); }
+    // generic click fallback: if user clicks near period controls, delay-update
+    document.body.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-role="month"],[data-role="period"],.chip,.pill,.btn,.select')){
+        setTimeout(()=>updateCaptionByPeriod(false), 0);
+      }
+    });
+  });
+})();
+</script>
+
+<script>
+function removeFilledBanner(){
+  const nodes = Array.from(document.querySelectorAll('body *'))
+    .filter(el => el.childElementCount === 0 && /—\s*база\s*заповнена/i.test(el.textContent||''));
+  nodes.forEach(n => { const p = n.closest('div,span,section,header') || n; try{ p.remove(); }catch(e){ n.remove(); } });
+}
+document.addEventListener('DOMContentLoaded', removeFilledBanner);
+</script>
 </body>
 </html>
