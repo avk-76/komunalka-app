@@ -10,3 +10,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", message: "Komunalka API connected successfully!" });
+});
